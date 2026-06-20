@@ -78,6 +78,9 @@
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
+      position: sticky;
+      top: 57px;
+      z-index: 99;
     }
     .tabs::-webkit-scrollbar { display: none; }
     .tab {
@@ -757,7 +760,7 @@ function catById(id){ return CATS.find(c=>c.id===id)||{label:id,icon:'📋'}; }
 // STATE
 // ═══════════════════════════════════════════════════════════════════
 let data = { unopened:{}, opened:{}, tobuy:{}, consider:{} };
-let filters = { 1:'all', 2:'all', 3:'all' };
+let filters = { 1:'all', 2:'all', 3:'all', 4:'all' };
 let activeTab = 1;
 let db = null; // Firebase db reference
 
