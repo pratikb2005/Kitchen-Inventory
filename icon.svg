@@ -1,4 +1,129 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
   <rect width="512" height="512" rx="100" fill="#3d7a5a"/>
-  <text x="256" y="340" font-size="280" text-anchor="middle" font-family="Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji,sans-serif">🍽️</text>
+
+  <!-- Sky gradient area -->
+  <rect x="0" y="0" width="512" height="512" rx="100" fill="url(#sky)"/>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4a9068"/>
+      <stop offset="100%" stop-color="#3d7a5a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Ground -->
+  <ellipse cx="256" cy="430" rx="210" ry="22" fill="#2d5e42" opacity="0.6"/>
+
+  <!-- ── HOUSE ── -->
+  <!-- House body -->
+  <rect x="152" y="255" width="208" height="162" rx="10" fill="#fff8f0"/>
+  <!-- Roof -->
+  <polygon points="130,262 256,148 382,262" fill="#e8c87a"/>
+  <!-- Roof shadow -->
+  <polygon points="256,148 382,262 370,262 256,162" fill="#d4b060" opacity="0.4"/>
+  <!-- Chimney -->
+  <rect x="298" y="160" width="30" height="64" rx="5" fill="#e8c87a"/>
+  <!-- Chimney smoke puffs -->
+  <circle cx="313" cy="148" r="8" fill="#ffffff" opacity="0.5"/>
+  <circle cx="320" cy="136" r="6" fill="#ffffff" opacity="0.35"/>
+  <circle cx="310" cy="126" r="5" fill="#ffffff" opacity="0.2"/>
+
+  <!-- Door -->
+  <rect x="216" y="322" width="80" height="95" rx="8" fill="#c0622a"/>
+  <!-- Door arch -->
+  <ellipse cx="256" cy="322" rx="40" ry="16" fill="#c0622a"/>
+  <!-- Door knob -->
+  <circle cx="284" cy="372" r="6" fill="#f0d060"/>
+  <!-- Door panel lines -->
+  <rect x="224" y="332" width="28" height="32" rx="3" fill="#a0501e" opacity="0.5"/>
+  <rect x="260" y="332" width="28" height="32" rx="3" fill="#a0501e" opacity="0.5"/>
+
+  <!-- Left window -->
+  <rect x="164" y="280" width="56" height="50" rx="6" fill="#b8ddc8"/>
+  <rect x="164" y="280" width="56" height="50" rx="6" fill="#a8e8f0" opacity="0.5"/>
+  <line x1="192" y1="280" x2="192" y2="330" stroke="#3d7a5a" stroke-width="3"/>
+  <line x1="164" y1="305" x2="220" y2="305" stroke="#3d7a5a" stroke-width="3"/>
+  <!-- Window box -->
+  <rect x="160" y="326" width="64" height="10" rx="3" fill="#e8c87a"/>
+
+  <!-- Right window -->
+  <rect x="292" y="280" width="56" height="50" rx="6" fill="#a8e8f0" opacity="0.7"/>
+  <line x1="320" y1="280" x2="320" y2="330" stroke="#3d7a5a" stroke-width="3"/>
+  <line x1="292" y1="305" x2="348" y2="305" stroke="#3d7a5a" stroke-width="3"/>
+  <!-- Window box -->
+  <rect x="288" y="326" width="64" height="10" rx="3" fill="#e8c87a"/>
+
+  <!-- Path to door -->
+  <rect x="232" y="415" width="48" height="18" rx="4" fill="#c8b090" opacity="0.6"/>
+
+  <!-- ── LEFT PLANT (tall leafy) ── -->
+  <!-- Pot -->
+  <path d="M90,418 L78,380 L114,380 L102,418 Z" fill="#c0622a"/>
+  <rect x="75" y="374" width="42" height="10" rx="3" fill="#a0501e"/>
+  <!-- Stem -->
+  <line x1="96" y1="374" x2="96" y2="320" stroke="#2d7a40" stroke-width="5"/>
+  <!-- Leaves -->
+  <ellipse cx="96" cy="338" rx="28" ry="14" fill="#4aaa60" transform="rotate(-30,96,338)"/>
+  <ellipse cx="96" cy="330" rx="26" ry="12" fill="#5aba70" transform="rotate(25,96,330)"/>
+  <ellipse cx="96" cy="318" rx="22" ry="11" fill="#4aaa60" transform="rotate(-15,96,318)"/>
+  <ellipse cx="96" cy="308" rx="18" ry="9"  fill="#5aba70" transform="rotate(20,96,308)"/>
+  <!-- Top flower -->
+  <circle cx="96" cy="298" r="10" fill="#f0d060"/>
+  <circle cx="96" cy="298" r="6"  fill="#e8a020"/>
+
+  <!-- ── RIGHT PLANT (bushy) ── -->
+  <path d="M410,418 L398,380 L434,380 L422,418 Z" fill="#c0622a"/>
+  <rect x="395" y="374" width="42" height="10" rx="3" fill="#a0501e"/>
+  <line x1="416" y1="374" x2="416" y2="330" stroke="#2d7a40" stroke-width="5"/>
+  <circle cx="416" cy="318" r="26" fill="#4aaa60"/>
+  <circle cx="398" cy="330" r="18" fill="#5aba70"/>
+  <circle cx="434" cy="330" r="18" fill="#3d9a50"/>
+  <circle cx="416" cy="306" r="16" fill="#5aba70"/>
+  <!-- Berries -->
+  <circle cx="404" cy="314" r="5" fill="#e05050"/>
+  <circle cx="424" cy="308" r="4" fill="#e05050"/>
+  <circle cx="430" cy="322" r="4" fill="#e05050"/>
+
+  <!-- ── COUPLE ── -->
+  <!-- Person 1 (taller - man) standing left of door -->
+  <!-- Body -->
+  <rect x="148" y="358" width="26" height="48" rx="6" fill="#4a80c0"/>
+  <!-- Head -->
+  <circle cx="161" cy="348" r="18" fill="#f5c8a0"/>
+  <!-- Hair -->
+  <ellipse cx="161" cy="334" rx="18" ry="8" fill="#3a2010"/>
+  <!-- Legs -->
+  <rect x="150" y="402" width="10" height="26" rx="4" fill="#2a4a80"/>
+  <rect x="164" y="402" width="10" height="26" rx="4" fill="#2a4a80"/>
+  <!-- Arm toward partner -->
+  <line x1="174" y1="372" x2="194" y2="382" stroke="#4a80c0" stroke-width="8" stroke-linecap="round"/>
+
+  <!-- Person 2 (shorter - woman) standing right of man -->
+  <!-- Body -->
+  <!-- Dress -->
+  <path d="M188,406 Q194,358 208,358 Q222,358 228,406 Z" fill="#e060a0"/>
+  <rect x="196" y="358" width="24" height="30" rx="6" fill="#e060a0"/>
+  <!-- Head -->
+  <circle cx="208" cy="346" r="17" fill="#f5c8a0"/>
+  <!-- Hair (longer) -->
+  <ellipse cx="208" cy="332" rx="17" ry="8" fill="#3a2010"/>
+  <ellipse cx="200" cy="348" rx="6" ry="14" fill="#3a2010"/>
+  <ellipse cx="216" cy="348" rx="6" ry="14" fill="#3a2010"/>
+  <!-- Arm toward partner -->
+  <line x1="196" y1="372" x2="178" y2="380" stroke="#e060a0" stroke-width="7" stroke-linecap="round"/>
+
+  <!-- Little heart between them -->
+  <path d="M183,360 C183,360 178,354 178,350 C178,346 183,345 183,350 C183,345 188,346 188,350 C188,354 183,360 183,360 Z" fill="#ff6b8a"/>
+
+  <!-- ── SUN ── -->
+  <circle cx="420" cy="100" r="28" fill="#f0d060" opacity="0.9"/>
+  <line x1="420" y1="60"  x2="420" y2="50"  stroke="#f0d060" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+  <line x1="448" y1="72"  x2="455" y2="65"  stroke="#f0d060" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+  <line x1="460" y1="100" x2="470" y2="100" stroke="#f0d060" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+  <line x1="448" y1="128" x2="455" y2="135" stroke="#f0d060" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+
+  <!-- Small cloud -->
+  <circle cx="100" cy="108" r="18" fill="#ffffff" opacity="0.6"/>
+  <circle cx="120" cy="100" r="22" fill="#ffffff" opacity="0.6"/>
+  <circle cx="142" cy="106" r="16" fill="#ffffff" opacity="0.6"/>
 </svg>

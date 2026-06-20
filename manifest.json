@@ -1,6 +1,6 @@
 {
-  "name": "Grocery Inventory",
-  "short_name": "Grocery",
+  "name": "SP Home",
+  "short_name": "SP Home",
   "description": "Track your grocery and household items — unopened, in use, and shopping list",
   "start_url": "./index.html",
   "display": "standalone",
