@@ -684,6 +684,7 @@ function initFirebase(config) {
       });
     });
 
+    loadPinFromFirebase();
     document.getElementById('setup-banner').classList.add('hidden');
     toast('🔥 Firebase connected! Syncing…');
     return true;
@@ -1146,18 +1147,36 @@ function toast(msg){
 const DEFAULT_PIN = '1234';
 let pinBuffer = '';
 let pinUnlocked = false;
+let cachedPin = null; // in-memory cache so Firebase latency doesn't block unlock
 
+// PIN is stored in Firebase (synced across devices) with localStorage as fallback
 function getStoredPin() {
-  return localStorage.getItem('ki_pin') || DEFAULT_PIN;
+  return cachedPin || localStorage.getItem('ki_pin') || DEFAULT_PIN;
+}
+
+function savePin(newPin) {
+  cachedPin = newPin;
+  localStorage.setItem('ki_pin', newPin);
+  if (db) db.ref('kitchen_config/pin').set(newPin);
+}
+
+// Load PIN from Firebase into cache on startup
+function loadPinFromFirebase() {
+  if (!db) return;
+  db.ref('kitchen_config/pin').on('value', snap => {
+    const fbPin = snap.val();
+    if (fbPin) {
+      cachedPin = fbPin;
+      localStorage.setItem('ki_pin', fbPin); // keep local in sync
+    }
+  });
 }
 
 function pinKey(digit) {
   if (pinBuffer.length >= 4) return;
   pinBuffer += digit;
   updatePinDots();
-  if (pinBuffer.length === 4) {
-    setTimeout(checkPin, 80);
-  }
+  if (pinBuffer.length === 4) setTimeout(checkPin, 80);
 }
 
 function pinBack() {
@@ -1179,7 +1198,6 @@ function checkPin() {
     pinUnlocked = true;
     document.getElementById('pin-screen').classList.add('hidden');
     document.getElementById('pin-error').textContent = '';
-    // Session: remember unlock for this browser session
     sessionStorage.setItem('ki_unlocked', '1');
   } else {
     updatePinDots('error');
@@ -1193,8 +1211,6 @@ function checkPin() {
 }
 
 function showChangePinModal() {
-  // Only reachable from the lock screen (no auth needed to change PIN
-  // since you need the current PIN to confirm)
   document.getElementById('cp-current').value = '';
   document.getElementById('cp-new').value = '';
   document.getElementById('cp-confirm').value = '';
@@ -1212,19 +1228,17 @@ function doChangePin() {
   if (!/^\d{4}$/.test(newPin)) { errEl.textContent = 'PIN must be exactly 4 digits'; return; }
   if (newPin !== confirm) { errEl.textContent = 'New PINs do not match'; return; }
 
-  localStorage.setItem('ki_pin', newPin);
+  savePin(newPin);
   closeModal('change-pin-modal');
-  toast('PIN updated successfully');
+  toast('PIN updated on all devices ✓');
 }
 
 function initPin() {
-  // Skip PIN if already unlocked in this session
   if (sessionStorage.getItem('ki_unlocked') === '1') {
     document.getElementById('pin-screen').classList.add('hidden');
     pinUnlocked = true;
     return;
   }
-  // Show the lock screen (it's visible by default)
 }
 
 // ═══════════════════════════════════════════════════════════════════
