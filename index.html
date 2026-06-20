@@ -906,6 +906,7 @@ function switchTab(n) {
 function populateSelects() {
   ['n1-cat','n2-cat','n3-cat','n4-cat','edit-cat'].forEach(id => {
     const s = document.getElementById(id);
+    if (!s) return;
     s.innerHTML = '<option value="">— Category —</option>';
     CATS.forEach(c => {
       const o = document.createElement('option');
@@ -1540,17 +1541,15 @@ setupVoice();
 document.getElementById('n1-date').value = todayStr();
 document.getElementById('n2-date').value = todayStr();
 
-// Try loading saved Firebase config
-const savedFbConfig = localStorage.getItem('ki_fb_config');
-if (savedFbConfig) {
-  try {
-    initFirebase(JSON.parse(savedFbConfig));
-  } catch(e) {
-    loadLocal(); render();
-  }
-} else {
-  loadLocal(); render();
-}
+// Firebase config — hardcoded so no setup needed on any device
+const FIREBASE_CONFIG = {
+  apiKey:      'AIzaSyC9pu80GFRnMyyirrPpv3awCQtl8Qvbm4s',
+  authDomain:  'sp-kitchen-inventory.firebaseapp.com',
+  databaseURL: 'https://sp-kitchen-inventory-default-rtdb.europe-west1.firebasedatabase.app',
+  projectId:   'sp-kitchen-inventory',
+};
+localStorage.setItem('ki_fb_config', JSON.stringify(FIREBASE_CONFIG));
+initFirebase(FIREBASE_CONFIG);
 </script>
 </body>
 </html>
