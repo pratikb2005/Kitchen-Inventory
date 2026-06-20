@@ -1,7 +1,7 @@
 {
-  "name": "Kitchen Inventory",
-  "short_name": "Kitchen",
-  "description": "Track your kitchen items — unopened, in use, and shopping list",
+  "name": "Grocery Inventory",
+  "short_name": "Grocery",
+  "description": "Track your grocery and household items — unopened, in use, and shopping list",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "portrait",
