@@ -107,6 +107,9 @@
     .tab.active-green  { color: var(--green);  border-bottom-color: var(--green); }
     .tab.active-orange { color: var(--orange); border-bottom-color: var(--orange); }
     .tab.active-blue   { color: var(--blue);   border-bottom-color: var(--blue); }
+    .tab.active-purple { color: #7c5cbf;       border-bottom-color: #7c5cbf; }
+    .filter-btn.fp { background: #7c5cbf; border-color: #7c5cbf; color: #fff; }
+    .sr-tag-4 { background: #f3f0fb; color: #7c5cbf; }
 
     /* ── PANELS ── */
     .panel { display: none; flex-direction: column; flex: 1; }
@@ -279,6 +282,8 @@
     .btn-remove  { background: #fdecea; color: #c0392b; border: 1px solid #f5c6c2; }
     .btn-delete  { background: transparent; color: var(--text-xsoft); border: 1px solid var(--border); font-size: 0.68rem; padding: 4px 8px; }
     .btn-delete:hover { background: #fdecea; color: #c0392b; border-color: #f5c6c2; }
+    .btn-edit    { background: transparent; color: var(--text-xsoft); border: 1px solid var(--border); font-size: 0.68rem; padding: 4px 8px; }
+    .btn-edit:hover { background: var(--blue-light); color: var(--blue); border-color: var(--blue-border); }
     .btn-bought  { background: var(--blue-light);   color: var(--blue);   border: 1px solid var(--blue-border); }
     .cat-hint {
       font-size: 0.72rem; color: var(--green); margin-top: 4px;
@@ -524,6 +529,11 @@
     To Buy
     <span class="tab-count" id="tc3">0</span>
   </div>
+  <div class="tab" id="tab4" onclick="switchTab(4)">
+    <span class="tab-icon">💡</span>
+    Consider
+    <span class="tab-count" id="tc4">0</span>
+  </div>
 </div>
 
 <!-- ═══ PANEL 1: UNOPENED ═══ -->
@@ -540,6 +550,7 @@
     <div class="form-row">
       <input type="text" id="n1-name"  class="input-name"  placeholder="Item name (e.g. Milk)"/>
       <input type="text" id="n1-brand" class="input-brand" placeholder="Brand (optional)"/>
+      <input type="text" id="n1-qty"   style="width:80px;flex:0 0 auto" placeholder="Qty"/>
     </div>
     <div class="form-row">
       <select id="n1-cat" class="select-cat"></select>
@@ -568,6 +579,7 @@
     <div class="form-row">
       <input type="text" id="n2-name"  class="input-name"  placeholder="Item name (e.g. Olive Oil)"/>
       <input type="text" id="n2-brand" class="input-brand" placeholder="Brand (optional)"/>
+      <input type="text" id="n2-qty"   style="width:80px;flex:0 0 auto" placeholder="Qty"/>
     </div>
     <div class="form-row">
       <select id="n2-cat" class="select-cat"></select>
@@ -596,6 +608,7 @@
     <div class="form-row">
       <input type="text" id="n3-name"  class="input-name"  placeholder="Item to buy (e.g. Butter)"/>
       <input type="text" id="n3-brand" class="input-brand" placeholder="Brand / notes"/>
+      <input type="text" id="n3-qty"   style="width:80px;flex:0 0 auto" placeholder="Qty"/>
     </div>
     <div class="form-row">
       <select id="n3-cat" class="select-cat"></select>
@@ -612,6 +625,38 @@
   </div>
   <div class="cat-filter" id="cf3"></div>
   <div class="items-list" id="list3"></div>
+</div>
+
+<!-- ═══ PANEL 4: CONSIDER BUYING ═══ -->
+<div class="panel" id="panel4">
+  <div class="section-header" style="background:#f3f0fb;border-bottom-color:#cfc0f0">
+    <div class="section-title">
+      <div class="dot" style="background:#7c5cbf"></div>
+      <h2>Consider Buying</h2>
+      <span class="section-badge" id="badge4">0 items</span>
+    </div>
+    <div class="section-desc">Items you've finished — worth buying again?</div>
+  </div>
+  <div class="cat-filter" id="cf4"></div>
+  <div class="items-list" id="list4"></div>
+</div>
+
+<!-- ── EDIT ITEM MODAL ── -->
+<div class="modal-overlay hidden" id="edit-modal">
+  <div class="modal" style="max-width:420px">
+    <h3>✏️ Edit Item</h3>
+    <div style="display:flex;flex-direction:column;gap:9px">
+      <input type="text" id="edit-name"  placeholder="Item name" style="width:100%"/>
+      <input type="text" id="edit-brand" placeholder="Brand (optional)" style="width:100%"/>
+      <input type="text" id="edit-qty"   placeholder="Quantity (optional)" style="width:100%"/>
+      <select id="edit-cat" style="width:100%"></select>
+      <input type="date" id="edit-date"  style="width:100%"/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal('edit-modal')">Cancel</button>
+      <button class="btn btn-green" onclick="saveEdit()">Save</button>
+    </div>
+  </div>
 </div>
 
 <!-- Move-to-open modal -->
@@ -711,7 +756,7 @@ function catById(id){ return CATS.find(c=>c.id===id)||{label:id,icon:'📋'}; }
 // ═══════════════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════════════
-let data = { unopened:{}, opened:{}, tobuy:{} };
+let data = { unopened:{}, opened:{}, tobuy:{}, consider:{} };
 let filters = { 1:'all', 2:'all', 3:'all' };
 let activeTab = 1;
 let db = null; // Firebase db reference
@@ -726,7 +771,7 @@ function initFirebase(config) {
     db = firebase.database(app);
 
     setSyncStatus('syncing');
-    ['unopened','opened','tobuy'].forEach(key => {
+    ['unopened','opened','tobuy','consider'].forEach(key => {
       db.ref('kitchen/' + key).on('value', snap => {
         data[key] = snap.val() || {};
         render();
@@ -779,14 +824,16 @@ function loadLocal() {
   data.unopened = JSON.parse(localStorage.getItem('ki_unopened') || '{}');
   data.opened   = JSON.parse(localStorage.getItem('ki_opened')   || '{}');
   data.tobuy    = JSON.parse(localStorage.getItem('ki_tobuy')    || '{}');
+  data.consider = JSON.parse(localStorage.getItem('ki_consider') || '{}');
 }
 function saveLocal() {
   localStorage.setItem('ki_unopened', JSON.stringify(data.unopened));
   localStorage.setItem('ki_opened',   JSON.stringify(data.opened));
   localStorage.setItem('ki_tobuy',    JSON.stringify(data.tobuy));
+  localStorage.setItem('ki_consider', JSON.stringify(data.consider));
 }
 
-function secKey(sec) { return sec===1?'unopened':sec===2?'opened':'tobuy'; }
+function secKey(sec) { return sec===1?'unopened':sec===2?'opened':sec===3?'tobuy':'consider'; }
 
 function persist(section, id, value) {
   const key = secKey(section);
@@ -843,10 +890,10 @@ function ageClass(days, isOpened){
 // ═══════════════════════════════════════════════════════════════════
 // TABS
 // ═══════════════════════════════════════════════════════════════════
-const TAB_COLORS = { 1:'active-green', 2:'active-orange', 3:'active-blue' };
+const TAB_COLORS = { 1:'active-green', 2:'active-orange', 3:'active-blue', 4:'active-purple' };
 function switchTab(n) {
   activeTab = n;
-  [1,2,3].forEach(i => {
+  [1,2,3,4].forEach(i => {
     document.getElementById('panel'+i).classList.toggle('active', i===n);
     const t = document.getElementById('tab'+i);
     t.className = 'tab' + (i===n ? ' '+TAB_COLORS[i] : '');
@@ -857,7 +904,7 @@ function switchTab(n) {
 // SELECTS
 // ═══════════════════════════════════════════════════════════════════
 function populateSelects() {
-  ['n1-cat','n2-cat','n3-cat'].forEach(id => {
+  ['n1-cat','n2-cat','n3-cat','n4-cat','edit-cat'].forEach(id => {
     const s = document.getElementById(id);
     s.innerHTML = '<option value="">— Category —</option>';
     CATS.forEach(c => {
@@ -875,7 +922,7 @@ function buildFilterBar(section, items) {
   const el = document.getElementById('cf'+section);
   const used = [...new Set(Object.values(items).map(i=>i.category).filter(Boolean))];
   const cur = filters[section];
-  const fc = section===1?'fg':section===2?'fo':'fb';
+  const fc = section===1?'fg':section===2?'fo':section===3?'fb':'fp';
   el.innerHTML = '';
   const allBtn = Object.assign(document.createElement('button'),{className:'filter-btn'+(cur==='all'?' '+fc:''),textContent:'All'});
   allBtn.onclick = ()=>{ filters[section]='all'; render(); };
@@ -895,18 +942,22 @@ function render() {
   const u = Object.values(data.unopened);
   const o = Object.values(data.opened);
   const b = Object.values(data.tobuy);
+  const c = Object.values(data.consider);
 
   document.getElementById('tc1').textContent = u.length;
   document.getElementById('tc2').textContent = o.length;
   document.getElementById('tc3').textContent = b.length;
+  document.getElementById('tc4').textContent = c.length;
 
   renderSection(1, u, 'Unopened', '📦', 'No unopened items yet');
   renderSection(2, o, 'In Use',   '🥄', 'No items in use yet');
   renderSection(3, b, 'To Buy',   '🛒', 'Shopping list is empty');
+  renderSection(4, c, 'Consider', '💡', 'No items here yet');
 
   buildFilterBar(1, data.unopened);
   buildFilterBar(2, data.opened);
   buildFilterBar(3, data.tobuy);
+  buildFilterBar(4, data.consider);
 }
 
 function renderSection(sec, allItems, label, emptyIcon, emptyMsg) {
@@ -941,6 +992,8 @@ function renderSection(sec, allItems, label, emptyIcon, emptyMsg) {
       const card = document.createElement('div');
       card.className='item-card';
 
+      const qtyTag = item.qty ? `<span class="item-brand">📦 ${escH(item.qty)}</span>` : '';
+
       if(sec===3) {
         const pp = item.priority||'medium';
         const pLabel = pp==='high'?'🔴':pp==='low'?'🟢':'🟡';
@@ -949,11 +1002,31 @@ function renderSection(sec, allItems, label, emptyIcon, emptyMsg) {
           <div class="item-info">
             <span class="item-name">${escH(item.name)}</span>
             ${item.brand?`<span class="item-brand">${escH(item.brand)}</span>`:''}
+            ${qtyTag}
             <span class="item-age">${pLabel} · ${timeAgo(ts)}</span>
           </div>
           <div class="item-actions">
             <button class="btn-sm btn-bought" data-id="${item.id}">Bought ✓</button>
+            <button class="btn-sm btn-edit"   data-id="${item.id}" data-sec="3">✏️</button>
             <button class="btn-sm btn-delete" data-id="${item.id}" data-sec="3">✕</button>
+          </div>`;
+        g.appendChild(card);
+        return;
+      }
+
+      if(sec===4) {
+        card.setAttribute('data-item-id', item.id);
+        card.innerHTML=`
+          <div class="item-info">
+            <span class="item-name">${escH(item.name)}</span>
+            ${item.brand?`<span class="item-brand">${escH(item.brand)}</span>`:''}
+            ${qtyTag}
+            <span class="item-age">Finished ${timeAgo(ts)}</span>
+          </div>
+          <div class="item-actions">
+            <button class="btn-sm btn-bought" data-id="${item.id}">Add to Buy</button>
+            <button class="btn-sm btn-edit"   data-id="${item.id}" data-sec="4">✏️</button>
+            <button class="btn-sm btn-delete" data-id="${item.id}" data-sec="4">✕</button>
           </div>`;
         g.appendChild(card);
         return;
@@ -964,10 +1037,12 @@ function renderSection(sec, allItems, label, emptyIcon, emptyMsg) {
         <div class="item-info">
           <span class="item-name">${escH(item.name)}</span>
           ${item.brand?`<span class="item-brand">${escH(item.brand)}</span>`:''}
+          ${qtyTag}
           <span class="item-age ${ageC}">🕐 ${timeAgo(ts)}</span>
         </div>
         <div class="item-actions">
           ${sec===1?`<button class="btn-sm btn-open" data-id="${item.id}">Open it</button>`:`<button class="btn-sm btn-remove" data-id="${item.id}">Done ✓</button>`}
+          <button class="btn-sm btn-edit"   data-id="${item.id}" data-sec="${sec}">✏️</button>
           <button class="btn-sm btn-delete" data-id="${item.id}" data-sec="${sec}">✕</button>
         </div>`;
       g.appendChild(card);
@@ -980,13 +1055,17 @@ function renderSection(sec, allItems, label, emptyIcon, emptyMsg) {
     btn.onclick=()=>startMoveToOpen(btn.dataset.id);
   });
   el.querySelectorAll('.btn-remove').forEach(btn=>{
-    btn.onclick=()=>removeItem(sec, btn.dataset.id, true);
+    btn.onclick=()=>moveDoneToConsider(btn.dataset.id);
   });
   el.querySelectorAll('.btn-bought').forEach(btn=>{
-    btn.onclick=()=>startMarkBought(btn.dataset.id);
+    if(sec===4) btn.onclick=()=>moveConsiderToBuy(btn.dataset.id);
+    else btn.onclick=()=>startMarkBought(btn.dataset.id);
   });
   el.querySelectorAll('.btn-delete').forEach(btn=>{
     btn.onclick=()=>removeItem(parseInt(btn.dataset.sec), btn.dataset.id, false);
+  });
+  el.querySelectorAll('.btn-edit').forEach(btn=>{
+    btn.onclick=()=>openEdit(parseInt(btn.dataset.sec), btn.dataset.id);
   });
 }
 
@@ -998,9 +1077,11 @@ function addItem(sec) {
   if (!name) { toast('Please enter an item name'); return; }
   const brand = document.getElementById('n'+sec+'-brand').value.trim();
   const cat   = document.getElementById('n'+sec+'-cat').value || 'other';
+  const qty   = document.getElementById('n'+sec+'-qty') ? document.getElementById('n'+sec+'-qty').value.trim() : '';
   const id    = uid();
 
   let item = { id, name, brand, category: cat };
+  if (qty) item.qty = qty;
 
   if (sec===1) {
     const dv = document.getElementById('n1-date').value;
@@ -1020,6 +1101,7 @@ function addItem(sec) {
   // Clear
   document.getElementById('n'+sec+'-name').value  = '';
   document.getElementById('n'+sec+'-brand').value = '';
+  if (document.getElementById('n'+sec+'-qty')) document.getElementById('n'+sec+'-qty').value = '';
   toast(`"${name}" added`);
 }
 
@@ -1027,6 +1109,8 @@ function addItem(sec) {
 [1,2,3].forEach(s=>{
   document.getElementById('n'+s+'-name').addEventListener('keydown',e=>{ if(e.key==='Enter') addItem(s); });
 });
+
+// Voice for section 4 (Consider has no add form so no vbtn4/n4-name)
 
 // ═══════════════════════════════════════════════════════════════════
 // MOVE: UNOPENED → IN USE
@@ -1061,16 +1145,98 @@ function startMarkBought(id) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// DONE → CONSIDER BUYING
+// ═══════════════════════════════════════════════════════════════════
+function moveDoneToConsider(id) {
+  const item = data.opened[id];
+  if (!item) return;
+  const moved = { ...item, finishedAt: new Date().toISOString() };
+  moveItem(2, 4, id, moved);
+  toast(`"${item.name}" moved to Consider Buying`);
+}
+
+// CONSIDER → TO BUY
+function moveConsiderToBuy(id) {
+  const item = data.consider[id];
+  if (!item) return;
+  const toBuy = { ...item, priority: 'medium', addedAt: new Date().toISOString() };
+  delete toBuy.finishedAt; delete toBuy.openedAt; delete toBuy.purchasedAt;
+  toBuy.addedAt = new Date().toISOString();
+  moveItem(4, 3, id, toBuy);
+  toast(`"${item.name}" added to To Buy`);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// EDIT ITEM
+// ═══════════════════════════════════════════════════════════════════
+let editingSec = null, editingId = null;
+
+function openEdit(sec, id) {
+  const item = data[secKey(sec)][id];
+  if (!item) return;
+  editingSec = sec; editingId = id;
+
+  document.getElementById('edit-name').value  = item.name  || '';
+  document.getElementById('edit-brand').value = item.brand || '';
+  document.getElementById('edit-qty').value   = item.qty   || '';
+  document.getElementById('edit-cat').value   = item.category || '';
+
+  // Pick the most relevant date for this section
+  const ts = sec===2 ? item.openedAt : sec===4 ? item.finishedAt : item.purchasedAt || item.addedAt;
+  document.getElementById('edit-date').value = ts ? ts.split('T')[0] : todayStr();
+
+  // Show/hide date field with useful label
+  const dateEl = document.getElementById('edit-date');
+  const dateLabel = sec===1?'Purchase date':sec===2?'Date opened':sec===4?'Date finished':'Date added';
+  dateEl.title = dateLabel;
+
+  document.getElementById('edit-modal').classList.remove('hidden');
+  document.getElementById('edit-name').focus();
+}
+
+function saveEdit() {
+  const name = document.getElementById('edit-name').value.trim();
+  if (!name) { toast('Name cannot be empty'); return; }
+
+  const key  = secKey(editingSec);
+  const item = { ...data[key][editingId] };
+
+  item.name     = name;
+  item.brand    = document.getElementById('edit-brand').value.trim();
+  item.qty      = document.getElementById('edit-qty').value.trim();
+  item.category = document.getElementById('edit-cat').value || 'other';
+
+  const dv = document.getElementById('edit-date').value;
+  if (dv) {
+    if (editingSec===1) item.purchasedAt = dv+'T12:00:00';
+    else if (editingSec===2) item.openedAt = dv+'T12:00:00';
+    else if (editingSec===3) item.addedAt  = dv+'T12:00:00';
+    else if (editingSec===4) item.finishedAt = dv+'T12:00:00';
+  }
+
+  // Remove empty qty to keep data clean
+  if (!item.qty) delete item.qty;
+
+  persist(editingSec, editingId, item);
+  closeModal('edit-modal');
+  toast(`"${name}" updated`);
+}
+
+// Allow Enter key to save
+document.getElementById('edit-modal').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') saveEdit();
+});
+
+// ═══════════════════════════════════════════════════════════════════
 // REMOVE
 // ═══════════════════════════════════════════════════════════════════
 function removeItem(sec, id, isFinished) {
-  const key = sec===1?'unopened':sec===2?'opened':'tobuy';
+  const key = secKey(sec);
   const item = data[key][id];
   if (!item) return;
-  const label = isFinished ? (sec===2 ? 'Mark as finished' : 'Remove') : 'Delete';
-  if (!confirm(`${label} "${item.name}"?`)) return;
+  if (!confirm(`Delete "${item.name}"?`)) return;
   persist(sec, id, null);
-  toast(`"${item.name}" ${isFinished && sec===2 ? 'marked finished' : 'deleted'}`);
+  toast(`"${item.name}" deleted`);
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1142,7 +1308,7 @@ function onNameInput(sec) {
 let recognition=null, activeVoiceSec=null;
 function setupVoice() {
   const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
-  if (!SR) { [1,2,3].forEach(s=>document.getElementById('vbtn'+s).style.display='none'); return; }
+  if (!SR) { [1,2,3].forEach(s=>document.getElementById('vbtn'+s).style.display='none'); return; } // no vbtn4 (Consider has no add form)
   recognition = new SR();
   recognition.continuous=false; recognition.interimResults=false; recognition.lang='en-US';
   recognition.onresult = e => parseVoice(e.results[0][0].transcript.trim(), activeVoiceSec);
@@ -1152,10 +1318,19 @@ function setupVoice() {
 function parseVoice(text, sec) {
   let catId='', lower=text.toLowerCase();
   CATS.forEach(c=>{ if(lower.includes(c.label.toLowerCase())||lower.includes(c.id)) catId=c.id; });
+
+  // Extract quantity: e.g. "2 litres", "3 packets", "500g", "x2"
+  const qtyMatch = text.match(/\b(\d+\.?\d*\s*(?:kg|g|ml|l|litre|liter|packet|pack|bottle|box|can|jar|piece|pieces|pcs|unit|units|dozen|roll|rolls|bag|bags|x)?)\b/i);
+  let qty = qtyMatch ? qtyMatch[0].trim() : '';
+
   let name=text;
+  // Strip quantity and category words from name
+  if(qty) name = name.replace(qty, '');
   CATS.forEach(c=>{ name=name.replace(new RegExp(c.label,'gi'),'').replace(new RegExp(c.id,'gi'),''); });
   name=name.replace(/\s+/g,' ').trim().replace(/^,|,$/g,'').trim();
+
   document.getElementById('n'+sec+'-name').value = name||text;
+  if(qty && document.getElementById('n'+sec+'-qty')) document.getElementById('n'+sec+'-qty').value = qty;
   const detectedCat = catId || autoCategory(name||text);
   if(detectedCat) document.getElementById('n'+sec+'-cat').value = detectedCat;
   const c = detectedCat ? catById(detectedCat) : null;
@@ -1304,14 +1479,14 @@ setInterval(render, 60000);
 // ═══════════════════════════════════════════════════════════════════
 const searchInput = document.getElementById('global-search');
 const searchResults = document.getElementById('search-results');
-const SEC_LABELS = { 1:'Unopened', 2:'In Use', 3:'To Buy' };
+const SEC_LABELS = { 1:'Unopened', 2:'In Use', 3:'To Buy', 4:'Consider' };
 
 searchInput.addEventListener('input', () => {
   const q = searchInput.value.trim().toLowerCase();
   if (!q) { searchResults.classList.remove('open'); return; }
 
   const hits = [];
-  [[1,'unopened'],[2,'opened'],[3,'tobuy']].forEach(([sec, key]) => {
+  [[1,'unopened'],[2,'opened'],[3,'tobuy'],[4,'consider']].forEach(([sec, key]) => {
     Object.values(data[key]).forEach(item => {
       if (item.name.toLowerCase().includes(q) || (item.brand||'').toLowerCase().includes(q)) {
         hits.push({ sec, item });
