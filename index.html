@@ -34,12 +34,13 @@
       --radius: 12px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; }
+    html, body { height: 100%; margin: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: var(--bg);
       color: var(--text);
-      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
     }
@@ -78,9 +79,6 @@
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
-      position: sticky;
-      top: 57px;
-      z-index: 99;
     }
     .tabs::-webkit-scrollbar { display: none; }
     .tab {
@@ -115,7 +113,7 @@
     .sr-tag-4 { background: #f3f0fb; color: #7c5cbf; }
 
     /* ── PANELS ── */
-    .panel { display: none; flex-direction: column; flex: 1; }
+    .panel { display: none; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; }
     .panel.active { display: flex; }
 
     /* ── ADD FORM ── */
