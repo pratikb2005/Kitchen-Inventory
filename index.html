@@ -42,8 +42,7 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: var(--bg);
       color: var(--text);
-      height: 100vh;
-      overflow: hidden;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
     }
@@ -125,7 +124,7 @@
     .maint-filter { padding: 8px 16px; border-bottom: 1px solid var(--border); display: flex; gap: 6px; flex-wrap: wrap; background: var(--surface2); }
 
     /* ── PANELS ── */
-    .panel { display: none; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; }
+    .panel { display: none; flex-direction: column; }
     .panel.active { display: flex; }
 
     /* ── ADD FORM ── */
@@ -973,6 +972,7 @@ function switchTab(n) {
     const t = document.getElementById('tab'+i);
     t.className = 'tab' + (i===n ? ' '+TAB_COLORS[i] : '');
   });
+  window.scrollTo(0, 0);
 }
 
 // ═══════════════════════════════════════════════════════════════════
