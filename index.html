@@ -32,6 +32,9 @@
       --tag-bg: #f0ede6;
       --shadow: 0 2px 8px rgba(0,0,0,0.07);
       --radius: 12px;
+      --maint: #b45309;
+      --maint-light: #fffbeb;
+      --maint-border: #fde68a;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; margin: 0; }
@@ -109,8 +112,17 @@
     .tab.active-orange { color: var(--orange); border-bottom-color: var(--orange); }
     .tab.active-blue   { color: var(--blue);   border-bottom-color: var(--blue); }
     .tab.active-purple { color: #7c5cbf;       border-bottom-color: #7c5cbf; }
+    .tab.active-amber  { color: var(--maint);  border-bottom-color: var(--maint); }
     .filter-btn.fp { background: #7c5cbf; border-color: #7c5cbf; color: #fff; }
+    .filter-btn.fm { background: var(--maint); border-color: var(--maint); color: #fff; }
     .sr-tag-4 { background: #f3f0fb; color: #7c5cbf; }
+    .sr-tag-5 { background: #fffbeb; color: var(--maint); }
+    .btn-maint { background: var(--maint); color: #fff; border: none; }
+    .btn-complete { background: #16a34a; color: #fff; font-size: 0.72rem; padding: 4px 8px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; white-space: nowrap; }
+    .maint-done .item-name { text-decoration: line-through; color: var(--text-xsoft); }
+    .maint-done { opacity: 0.7; }
+    .maint-section-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; color: var(--text-xsoft); padding: 10px 16px 4px; text-transform: uppercase; }
+    .maint-filter { padding: 8px 16px; border-bottom: 1px solid var(--border); display: flex; gap: 6px; flex-wrap: wrap; background: var(--surface2); }
 
     /* ── PANELS ── */
     .panel { display: none; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; }
@@ -535,6 +547,11 @@
     Consider
     <span class="tab-count" id="tc4">0</span>
   </div>
+  <div class="tab" id="tab5" onclick="switchTab(5)">
+    <span class="tab-icon">🔧</span>
+    Maintenance
+    <span class="tab-count" id="tc5">0</span>
+  </div>
 </div>
 
 <!-- ═══ PANEL 1: UNOPENED ═══ -->
@@ -642,6 +659,35 @@
   <div class="items-list" id="list4"></div>
 </div>
 
+<!-- ═══ PANEL 5: MAINTENANCE ═══ -->
+<div class="panel" id="panel5">
+  <div class="section-header" style="background:var(--maint-light);border-bottom-color:var(--maint-border)">
+    <div class="section-title">
+      <div class="dot" style="background:var(--maint)"></div>
+      <h2>Maintenance</h2>
+      <span class="section-badge" id="badge5">0 tasks</span>
+    </div>
+    <div class="section-desc">House maintenance tasks — pending and completed</div>
+  </div>
+  <div class="add-form">
+    <div class="form-row">
+      <input type="text" id="n5-name" class="input-name" placeholder="Task (e.g. Fix leaking tap)"/>
+    </div>
+    <div class="form-row">
+      <select id="n5-priority" style="flex:1">
+        <option value="medium">Medium priority</option>
+        <option value="high">High priority</option>
+        <option value="low">Low priority</option>
+      </select>
+      <button class="btn btn-voice" id="vbtn5">🎙️ Voice</button>
+      <button class="btn btn-maint" onclick="addMaintItem()">+ Add</button>
+    </div>
+    <div class="voice-status" id="vs5"></div>
+  </div>
+  <div class="maint-filter" id="mf5"></div>
+  <div class="items-list" id="list5"></div>
+</div>
+
 <!-- ── EDIT ITEM MODAL ── -->
 <div class="modal-overlay hidden" id="edit-modal">
   <div class="modal" style="max-width:420px">
@@ -656,6 +702,31 @@
     <div class="modal-actions">
       <button class="btn btn-cancel" onclick="closeModal('edit-modal')">Cancel</button>
       <button class="btn btn-green" onclick="saveEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Maintenance Edit Modal -->
+<div class="modal-overlay hidden" id="maint-edit-modal">
+  <div class="modal" style="max-width:420px">
+    <h3>✏️ Edit Task</h3>
+    <div style="display:flex;flex-direction:column;gap:9px">
+      <input type="text" id="me-name" placeholder="Task description" style="width:100%"/>
+      <select id="me-priority" style="width:100%">
+        <option value="high">🔴 High priority</option>
+        <option value="medium">🟡 Medium priority</option>
+        <option value="low">🟢 Low priority</option>
+      </select>
+      <select id="me-status" style="width:100%">
+        <option value="needed">🔧 Maintenance Needed</option>
+        <option value="done">✅ Completed</option>
+      </select>
+      <label style="font-size:0.8rem;color:var(--text-soft)">Date added</label>
+      <input type="date" id="me-date" style="width:100%"/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal('maint-edit-modal')">Cancel</button>
+      <button class="btn btn-maint" onclick="saveMaintEdit()">Save</button>
     </div>
   </div>
 </div>
@@ -757,8 +828,9 @@ function catById(id){ return CATS.find(c=>c.id===id)||{label:id,icon:'📋'}; }
 // ═══════════════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════════════
-let data = { unopened:{}, opened:{}, tobuy:{}, consider:{} };
+let data = { unopened:{}, opened:{}, tobuy:{}, consider:{}, maintenance:{} };
 let filters = { 1:'all', 2:'all', 3:'all', 4:'all' };
+let maintFilter = 'all'; // 'all' | 'needed' | 'done'
 let activeTab = 1;
 let db = null; // Firebase db reference
 
@@ -772,7 +844,7 @@ function initFirebase(config) {
     db = firebase.database(app);
 
     setSyncStatus('syncing');
-    ['unopened','opened','tobuy','consider'].forEach(key => {
+    ['unopened','opened','tobuy','consider','maintenance'].forEach(key => {
       db.ref('kitchen/' + key).on('value', snap => {
         data[key] = snap.val() || {};
         render();
@@ -822,19 +894,21 @@ function setSyncStatus(state) {
 // LOCAL FALLBACK STORAGE
 // ═══════════════════════════════════════════════════════════════════
 function loadLocal() {
-  data.unopened = JSON.parse(localStorage.getItem('ki_unopened') || '{}');
-  data.opened   = JSON.parse(localStorage.getItem('ki_opened')   || '{}');
-  data.tobuy    = JSON.parse(localStorage.getItem('ki_tobuy')    || '{}');
-  data.consider = JSON.parse(localStorage.getItem('ki_consider') || '{}');
+  data.unopened    = JSON.parse(localStorage.getItem('ki_unopened')    || '{}');
+  data.opened      = JSON.parse(localStorage.getItem('ki_opened')      || '{}');
+  data.tobuy       = JSON.parse(localStorage.getItem('ki_tobuy')       || '{}');
+  data.consider    = JSON.parse(localStorage.getItem('ki_consider')    || '{}');
+  data.maintenance = JSON.parse(localStorage.getItem('ki_maintenance') || '{}');
 }
 function saveLocal() {
-  localStorage.setItem('ki_unopened', JSON.stringify(data.unopened));
-  localStorage.setItem('ki_opened',   JSON.stringify(data.opened));
-  localStorage.setItem('ki_tobuy',    JSON.stringify(data.tobuy));
-  localStorage.setItem('ki_consider', JSON.stringify(data.consider));
+  localStorage.setItem('ki_unopened',    JSON.stringify(data.unopened));
+  localStorage.setItem('ki_opened',      JSON.stringify(data.opened));
+  localStorage.setItem('ki_tobuy',       JSON.stringify(data.tobuy));
+  localStorage.setItem('ki_consider',    JSON.stringify(data.consider));
+  localStorage.setItem('ki_maintenance', JSON.stringify(data.maintenance));
 }
 
-function secKey(sec) { return sec===1?'unopened':sec===2?'opened':sec===3?'tobuy':'consider'; }
+function secKey(sec) { return sec===1?'unopened':sec===2?'opened':sec===3?'tobuy':sec===4?'consider':'maintenance'; }
 
 function persist(section, id, value) {
   const key = secKey(section);
@@ -891,10 +965,10 @@ function ageClass(days, isOpened){
 // ═══════════════════════════════════════════════════════════════════
 // TABS
 // ═══════════════════════════════════════════════════════════════════
-const TAB_COLORS = { 1:'active-green', 2:'active-orange', 3:'active-blue', 4:'active-purple' };
+const TAB_COLORS = { 1:'active-green', 2:'active-orange', 3:'active-blue', 4:'active-purple', 5:'active-amber' };
 function switchTab(n) {
   activeTab = n;
-  [1,2,3,4].forEach(i => {
+  [1,2,3,4,5].forEach(i => {
     document.getElementById('panel'+i).classList.toggle('active', i===n);
     const t = document.getElementById('tab'+i);
     t.className = 'tab' + (i===n ? ' '+TAB_COLORS[i] : '');
@@ -938,6 +1012,85 @@ function buildFilterBar(section, items) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// MAINTENANCE FILTER + RENDER
+// ═══════════════════════════════════════════════════════════════════
+function buildMaintFilterBar(items) {
+  const el = document.getElementById('mf5');
+  el.innerHTML = '';
+  const counts = { all: items.length, needed: items.filter(i=>i.status==='needed').length, done: items.filter(i=>i.status==='done').length };
+  [['all','All'],['needed','🔧 Needed'],['done','✅ Completed']].forEach(([val, label]) => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (maintFilter===val ? ' fm' : '');
+    btn.textContent = label + ' (' + counts[val] + ')';
+    btn.onclick = () => { maintFilter = val; render(); };
+    el.appendChild(btn);
+  });
+}
+
+function renderMaintenance(allItems) {
+  const needed = allItems.filter(i=>i.status!=='done').sort((a,b)=>{ const p={high:0,medium:1,low:2}; return (p[a.priority]||1)-(p[b.priority]||1); });
+  const done   = allItems.filter(i=>i.status==='done').sort((a,b)=>new Date(b.doneAt)-new Date(a.doneAt));
+
+  document.getElementById('badge5').textContent = allItems.length + ' task' + (allItems.length===1?'':'s');
+  const el = document.getElementById('list5');
+  el.innerHTML = '';
+
+  const visible = maintFilter==='needed' ? needed : maintFilter==='done' ? done : [...needed, ...done];
+
+  if (visible.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🔧</div><div class="empty-text">${maintFilter==='done'?'No completed tasks yet':maintFilter==='needed'?'No pending tasks':'No maintenance tasks yet'}</div></div>`;
+    return;
+  }
+
+  function makeCard(item) {
+    const isDone = item.status === 'done';
+    const pp = item.priority || 'medium';
+    const pLabel = pp==='high'?'🔴':pp==='low'?'🟢':'🟡';
+    const ts = isDone ? item.doneAt : item.addedAt;
+    const timeLabel = isDone ? '✅ Done ' + timeAgo(ts) : pLabel + ' · Added ' + timeAgo(item.addedAt);
+    const card = document.createElement('div');
+    card.className = 'item-card' + (isDone ? ' maint-done' : '');
+    card.setAttribute('data-item-id', item.id);
+    card.innerHTML = `
+      <div class="item-info">
+        <span class="item-name">${escH(item.name)}</span>
+        <span class="item-age">${timeLabel}</span>
+      </div>
+      <div class="item-actions">
+        ${!isDone ? `<button class="btn-complete" data-id="${item.id}">Done ✓</button>` : ''}
+        <button class="btn-sm btn-edit" data-id="${item.id}" data-sec="5">✏️</button>
+        <button class="btn-sm btn-delete" data-id="${item.id}" data-sec="5">✕</button>
+      </div>`;
+    return card;
+  }
+
+  if (maintFilter === 'all' && needed.length > 0 && done.length > 0) {
+    const needLabel = document.createElement('div');
+    needLabel.className = 'maint-section-label';
+    needLabel.textContent = 'Maintenance Needed';
+    el.appendChild(needLabel);
+    needed.forEach(item => el.appendChild(makeCard(item)));
+    const doneLabel = document.createElement('div');
+    doneLabel.className = 'maint-section-label';
+    doneLabel.textContent = 'Completed';
+    el.appendChild(doneLabel);
+    done.forEach(item => el.appendChild(makeCard(item)));
+  } else {
+    visible.forEach(item => el.appendChild(makeCard(item)));
+  }
+
+  el.querySelectorAll('.btn-complete').forEach(btn => {
+    btn.onclick = () => completeMaintTask(btn.dataset.id);
+  });
+  el.querySelectorAll('.btn-delete').forEach(btn => {
+    btn.onclick = () => removeItem(5, btn.dataset.id, false);
+  });
+  el.querySelectorAll('.btn-edit').forEach(btn => {
+    btn.onclick = () => openMaintEdit(btn.dataset.id);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // RENDER
 // ═══════════════════════════════════════════════════════════════════
 function render() {
@@ -945,21 +1098,25 @@ function render() {
   const o = Object.values(data.opened);
   const b = Object.values(data.tobuy);
   const c = Object.values(data.consider);
+  const m = Object.values(data.maintenance);
 
   document.getElementById('tc1').textContent = u.length;
   document.getElementById('tc2').textContent = o.length;
   document.getElementById('tc3').textContent = b.length;
   document.getElementById('tc4').textContent = c.length;
+  document.getElementById('tc5').textContent = m.filter(i=>i.status==='needed').length;
 
   renderSection(1, u, 'Unopened', '📦', 'No unopened items yet');
   renderSection(2, o, 'In Use',   '🥄', 'No items in use yet');
   renderSection(3, b, 'To Buy',   '🛒', 'Shopping list is empty');
   renderSection(4, c, 'Consider', '💡', 'No items here yet');
+  renderMaintenance(m);
 
   buildFilterBar(1, data.unopened);
   buildFilterBar(2, data.opened);
   buildFilterBar(3, data.tobuy);
   buildFilterBar(4, data.consider);
+  buildMaintFilterBar(m);
 }
 
 function renderSection(sec, allItems, label, emptyIcon, emptyMsg) {
@@ -1110,6 +1267,66 @@ function addItem(sec) {
 // Enter key
 [1,2,3].forEach(s=>{
   document.getElementById('n'+s+'-name').addEventListener('keydown',e=>{ if(e.key==='Enter') addItem(s); });
+});
+document.getElementById('n5-name').addEventListener('keydown',e=>{ if(e.key==='Enter') addMaintItem(); });
+
+// ═══════════════════════════════════════════════════════════════════
+// MAINTENANCE ADD / COMPLETE / EDIT
+// ═══════════════════════════════════════════════════════════════════
+function addMaintItem() {
+  const name = document.getElementById('n5-name').value.trim();
+  if (!name) { toast('Please enter a task description'); return; }
+  const priority = document.getElementById('n5-priority').value || 'medium';
+  const id = uid();
+  const item = { id, name, priority, status: 'needed', addedAt: new Date().toISOString() };
+  persist(5, id, item);
+  document.getElementById('n5-name').value = '';
+  document.getElementById('n5-priority').value = 'medium';
+  toast(`"${name}" added to Maintenance`);
+}
+
+function completeMaintTask(id) {
+  const item = data.maintenance[id];
+  if (!item) return;
+  const updated = { ...item, status: 'done', doneAt: new Date().toISOString() };
+  persist(5, id, updated);
+  toast(`"${item.name}" marked as complete ✓`);
+}
+
+let editingMaintId = null;
+function openMaintEdit(id) {
+  const item = data.maintenance[id];
+  if (!item) return;
+  editingMaintId = id;
+  document.getElementById('me-name').value     = item.name || '';
+  document.getElementById('me-priority').value = item.priority || 'medium';
+  document.getElementById('me-status').value   = item.status || 'needed';
+  document.getElementById('me-date').value     = item.addedAt ? item.addedAt.split('T')[0] : todayStr();
+  document.getElementById('maint-edit-modal').classList.remove('hidden');
+  document.getElementById('me-name').focus();
+}
+
+function saveMaintEdit() {
+  const name = document.getElementById('me-name').value.trim();
+  if (!name) { toast('Task name cannot be empty'); return; }
+  const item     = { ...data.maintenance[editingMaintId] };
+  const newStatus   = document.getElementById('me-status').value;
+  const wasNeeded   = item.status !== 'done';
+  const nowDone     = newStatus === 'done';
+  item.name     = name;
+  item.priority = document.getElementById('me-priority').value;
+  item.status   = newStatus;
+  const dv = document.getElementById('me-date').value;
+  if (dv) item.addedAt = dv + 'T12:00:00';
+  if (nowDone && wasNeeded) item.doneAt = item.doneAt || new Date().toISOString();
+  if (!nowDone) delete item.doneAt;
+  persist(5, editingMaintId, item);
+  closeModal('maint-edit-modal');
+  toast(`"${name}" updated`);
+}
+
+document.getElementById('maint-edit-modal').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'SELECT') saveMaintEdit();
 });
 
 // Voice for section 4 (Consider has no add form so no vbtn4/n4-name)
@@ -1310,7 +1527,7 @@ function onNameInput(sec) {
 let recognition=null, activeVoiceSec=null;
 function setupVoice() {
   const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
-  if (!SR) { [1,2,3].forEach(s=>document.getElementById('vbtn'+s).style.display='none'); return; } // no vbtn4 (Consider has no add form)
+  if (!SR) { [1,2,3,5].forEach(s=>document.getElementById('vbtn'+s).style.display='none'); return; }
   recognition = new SR();
   recognition.continuous=false; recognition.interimResults=false; recognition.lang='en-US';
   recognition.onresult = e => parseVoice(e.results[0][0].transcript.trim(), activeVoiceSec);
@@ -1318,6 +1535,13 @@ function setupVoice() {
   recognition.onend    = () => stopVoice();
 }
 function parseVoice(text, sec) {
+  // Maintenance voice: just fill the name field
+  if (sec === 5) {
+    document.getElementById('n5-name').value = text;
+    setVS(5, `Heard: "${text}"`);
+    return;
+  }
+
   let catId='', lower=text.toLowerCase();
   CATS.forEach(c=>{ if(lower.includes(c.label.toLowerCase())||lower.includes(c.id)) catId=c.id; });
 
@@ -1358,7 +1582,7 @@ function toggleVoice(sec){
   setVS(sec,'Listening…');
   recognition.start();
 }
-[1,2,3].forEach(s=>document.getElementById('vbtn'+s).onclick=()=>toggleVoice(s));
+[1,2,3,5].forEach(s=>document.getElementById('vbtn'+s).onclick=()=>toggleVoice(s));
 
 // ═══════════════════════════════════════════════════════════════════
 // TOAST
@@ -1481,14 +1705,14 @@ setInterval(render, 60000);
 // ═══════════════════════════════════════════════════════════════════
 const searchInput = document.getElementById('global-search');
 const searchResults = document.getElementById('search-results');
-const SEC_LABELS = { 1:'Unopened', 2:'In Use', 3:'To Buy', 4:'Consider' };
+const SEC_LABELS = { 1:'Unopened', 2:'In Use', 3:'To Buy', 4:'Consider', 5:'Maintenance' };
 
 searchInput.addEventListener('input', () => {
   const q = searchInput.value.trim().toLowerCase();
   if (!q) { searchResults.classList.remove('open'); return; }
 
   const hits = [];
-  [[1,'unopened'],[2,'opened'],[3,'tobuy'],[4,'consider']].forEach(([sec, key]) => {
+  [[1,'unopened'],[2,'opened'],[3,'tobuy'],[4,'consider'],[5,'maintenance']].forEach(([sec, key]) => {
     Object.values(data[key]).forEach(item => {
       if (item.name.toLowerCase().includes(q) || (item.brand||'').toLowerCase().includes(q)) {
         hits.push({ sec, item });
@@ -1500,10 +1724,12 @@ searchInput.addEventListener('input', () => {
     searchResults.innerHTML = `<div class="sr-empty">No items found for "${escH(searchInput.value)}"</div>`;
   } else {
     searchResults.innerHTML = hits.map(({sec, item}) => {
-      const c = catById(item.category);
+      const meta = sec===5
+        ? (item.status==='done' ? '✅ Completed' : '🔧 Needed')
+        : (() => { const c=catById(item.category); return c.icon+' '+(item.brand?escH(item.brand):c.label); })();
       return `<div class="sr-item" data-sec="${sec}" data-id="${item.id}">
         <span class="sr-item-name">${escH(item.name)}</span>
-        <span class="sr-item-meta">${c.icon} ${item.brand ? escH(item.brand) : c.label}</span>
+        <span class="sr-item-meta">${meta}</span>
         <span class="sr-section-tag sr-tag-${sec}">${SEC_LABELS[sec]}</span>
       </div>`;
     }).join('');
@@ -1521,7 +1747,7 @@ function closeSearch() { searchResults.classList.remove('open'); searchInput.val
 function jumpToItem(sec, id) {
   closeSearch();
   switchTab(sec);
-  filters[sec] = 'all';
+  if (sec === 5) { maintFilter = 'all'; } else { filters[sec] = 'all'; }
   render();
   // Scroll and highlight after render
   requestAnimationFrame(() => {
