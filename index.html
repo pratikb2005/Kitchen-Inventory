@@ -972,7 +972,8 @@ function switchTab(n) {
     const t = document.getElementById('tab'+i);
     t.className = 'tab' + (i===n ? ' '+TAB_COLORS[i] : '');
   });
-  window.scrollTo(0, 0);
+  document.body.scrollTop = 0;
+  document.documentElement.scrollTop = 0;
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1762,6 +1763,8 @@ function jumpToItem(sec, id) {
 // ═══════════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════════
+document.body.scrollTop = 0;
+document.documentElement.scrollTop = 0;
 initPin();
 populateSelects();
 setupVoice();
